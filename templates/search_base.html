@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="{% static 'search.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.js'></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"
+            integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript">
+        function deactivation() {
+            var page_url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + "/set_inactive/";
+
+            $.ajax({
+                type: "GET",
+                url: page_url,
+                success: function (data) {
+                    console.log('ok!')
+                }
+            });
+            return true
+        }
+
+        if (!sessionStorage.getItem('pageLoaded')) {
+            sessionStorage.setItem('pageLoaded', true);
+        } else {
+            console.log('reloaded');
+            deactivation();
+        }
+        let text = '';
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function getURL() {
+            deactivation()
+             await sleep(1500);
+            var sqlInjectionSocket = new WebSocket("ws://127.0.0.1:8000/ws/sqlinjection")
+            sqlInjectionSocket.onopen = (event) => {
+                sqlInjectionSocket.send(JSON.stringify({
+                    "url": document.getElementById("search").value,
+                    "finde": "{% block finde %}{% endblock %}"
+                }));
+            };
+            progress = document.getElementById("progress")
+            sqlInjectionSocket.onmessage = (event) => {
+                const regex = /ZAP/i;
+                var pars_dat = JSON.parse(event.data)
+                progress.innerHTML = pars_dat.message
+                console.log(pars_dat)
+                var detail = pars_dat?.detail
+                console.log(detail)
+                detail?.map((item, index) => {
+                    const temp = document.createElement('h3');
+                    temp.className = 'textHeader';
+                    temp.innerHTML = detail[index].replace(regex, 'abc');
+                    document.getElementsByClassName('data-container')[0].appendChild(temp);
+                    text = text.concat('\n', detail[index]);
+                })
+            }
+
+        }
+
+        function CreateTextFile() {
+            var blob = new Blob(["URLs found by spider.".concat('\n', text)], {
+                type: "text/plain;charset=utf-8",
+            });
+            saveAs(blob, "download.txt");
+        }
+    </script>
+    <title>Search</title>
+</head>
+<body>
+
+<div class="main">
+    <h2 id="section-title">{% block name %} {% endblock %}</h2>
+    <div class="search">
+        <form>
+            <label for="search">URL</label>
+            <input type="text" placeholder="" name="search" id="search">
+            <button type="button" onclick="getURL()"><i class="fa fa-search"></i></button>
+        </form>
+        <p id="progress" style="color: #f1f1f1"></p>
+    </div>
+    <div class="data-container"></div>
+    <button class="downloadButton" type="button" onclick="CreateTextFile();">Download</button>
+</div>
+</body>
+</html>

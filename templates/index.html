@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+	<title>DW</title>
+</head>
+<body>
+	<div class="main">
+		<div class="part1">
+			<h1>Online system for detecting website<br> vulnerabilities</h1>
+		</div>
+		<div class="part2">
+			<div class="square1">
+				<h1 id="sq1">Sql Injection</h1><br>
+				<a href="{% url 'sqlin_jection' %}"><input type="button" name="#" value="Start" id="inp1"></a>
+			</div>
+			<div class="square2">
+				<h1 id="sq2">XSS(Cross Site Scripting)</h1>
+				<a href="{% url 'xss' %}"><input type="button" name="#" value="Start" id="inp2"></a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
